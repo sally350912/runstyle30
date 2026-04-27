@@ -35,8 +35,7 @@ const DEFAULT_STATE: AppState = {
 
 const KEY = 'runstyle30_state'
 
-// 以 55kg、MET 8.2 計算跑步消耗熱量
-function calcKcal(km: number, minutes: number): number {
+function calcKcal(minutes: number): number {
   const met = 8.2
   const kg  = 55
   const hrs = minutes / 60
@@ -66,7 +65,7 @@ export function useStore() {
 
   const checkIn = useCallback((km = 3.2, minutes = 28) => {
     const today = new Date().toISOString().split('T')[0]
-    const kcal  = calcKcal(km, minutes)
+    const kcal  = calcKcal(minutes)
     setState(prev => {
       const log: DayLog = {
         date: today, km, minutes, kcal,
