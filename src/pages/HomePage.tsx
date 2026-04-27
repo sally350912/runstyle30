@@ -16,16 +16,15 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
   const [minutes, setMinutes]     = useState('28')
 
   const holdStart = useRef<number>(0)
-  const holdTimer = useRef<ReturnType<typeof setInterval>>()
+  const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const done = state.todayCheckedIn || checkedAnim
 
-  const weekKm     = state.logs.slice(-7).reduce((a, l) => a + l.km, 0).toFixed(1)
-  const pct        = Math.round((state.currentDay / 30) * 100)
-  const displayKm  = todayLog ? todayLog.km      : parseFloat(km)
-  const displayMin = todayLog ? todayLog.minutes  : parseFloat(minutes)
-  const displayKcal= todayLog ? todayLog.kcal     : Math.round(displayKm * 55)
-  const displayBoba= (displayKcal / 230).toFixed(1)
+  const weekKm      = state.logs.slice(-7).reduce((a, l) => a + l.km, 0).toFixed(1)
+  const pct         = Math.round((state.currentDay / 30) * 100)
+  const displayKm   = todayLog ? todayLog.km   : parseFloat(km)
+  const displayKcal = todayLog ? todayLog.kcal : Math.round(displayKm * 55)
+  const displayBoba = (displayKcal / 230).toFixed(1)
 
   const startHold = useCallback(() => {
     if (done) return
@@ -36,7 +35,7 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
       const p = Math.min(100, (elapsed / 3000) * 100)
       setHoldPct(p)
       if (elapsed >= 3000) {
-        clearInterval(holdTimer.current)
+        clearInterval(holdTimer.current!)
         setHolding(false)
         setHoldPct(100)
         setShowModal(true)
@@ -46,7 +45,7 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
 
   const endHold = useCallback(() => {
     if (done) return
-    clearInterval(holdTimer.current)
+    if (holdTimer.current) clearInterval(holdTimer.current)
     setHolding(false)
     if (holdPct < 100) setHoldPct(0)
   }, [done, holdPct])
@@ -65,7 +64,7 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
   return (
     <div style={{ paddingBottom:24 }}>
 
-      {/* 里程碑橫幅（只顯示天數，無 Reels 字樣） */}
+      {/* 里程碑橫幅 */}
       {[7,14,21,30].includes(state.currentDay) && (
         <div style={{ margin:'0 20px 16px', display:'flex', alignItems:'center', gap:12, borderRadius:14, border:'1px solid rgba(255,158,125,0.3)', background:'rgba(255,158,125,0.1)', padding:'14px 16px' }}>
           <span style={{ fontSize:22 }}>✦</span>
@@ -116,21 +115,9 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
         <button
           onMouseDown={startHold} onMouseUp={endHold} onMouseLeave={endHold}
           onTouchStart={startHold} onTouchEnd={endHold}
-          style={{
-            width:80, height:80, borderRadius:'50%', border:'none',
-            background: done ? '#C4684A' : '#FF9E7D',
-            boxShadow: holding
-              ? '0 0 0 14px rgba(255,158,125,0.25),0 0 0 26px rgba(255,158,125,0.08)'
-              : '0 0 0 8px rgba(255,158,125,0.15),0 0 0 16px rgba(255,158,125,0.07)',
-            cursor: done ? 'default' : 'pointer',
-            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-            transition:'box-shadow 0.3s,background 0.3s', margin:'0 auto 8px',
-          }}
-        >
+          style={{ width:80, height:80, borderRadius:'50%', border:'none', background: done ? '#C4684A' : '#FF9E7D', boxShadow: holding ? '0 0 0 14px rgba(255,158,125,0.25),0 0 0 26px rgba(255,158,125,0.08)' : '0 0 0 8px rgba(255,158,125,0.15),0 0 0 16px rgba(255,158,125,0.07)', cursor: done ? 'default' : 'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', transition:'box-shadow 0.3s,background 0.3s', margin:'0 auto 8px' }}>
           <span style={{ fontSize:28 }}>{done ? '✓' : '☀️'}</span>
-          <span style={{ fontSize:8, color:'white', fontWeight:500, marginTop:2 }}>
-            {done ? '已簽到' : '暖光簽到'}
-          </span>
+          <span style={{ fontSize:8, color:'white', fontWeight:500, marginTop:2 }}>{done ? '已簽到' : '暖光簽到'}</span>
         </button>
         <div style={{ width:80, height:3, background:'#E8DDD8', borderRadius:10, margin:'0 auto 6px', overflow:'hidden' }}>
           <div style={{ width:`${holdPct}%`, height:'100%', background:'#FF9E7D', borderRadius:10, transition:'width 0.1s linear' }} />
@@ -150,47 +137,35 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
                 <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:24, fontWeight:300, color:'#3A2820', margin:'0 0 2px' }}>今日跑步記錄 ☀️</p>
                 <p style={{ fontSize:12, color:'#9C7B6B', margin:0 }}>填入今天的成果，一起點亮 Day {state.currentDay}！</p>
               </div>
-              <button onClick={() => setShowModal(false)}
-                style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #E8DDD8', background:'white', cursor:'pointer', fontSize:14, color:'#B89A8E', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setShowModal(false)} style={{ width:32, height:32, borderRadius:'50%', border:'1px solid #E8DDD8', background:'white', cursor:'pointer', fontSize:14, color:'#B89A8E', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
             </div>
 
-            {/* 里程 */}
             <div style={{ marginBottom:20 }}>
               <p style={{ fontSize:11, letterSpacing:'1.2px', textTransform:'uppercase', color:'#B89A8E', marginBottom:10 }}>跑步里程</p>
               <div style={{ display:'flex', gap:6, marginBottom:10 }}>
                 {QUICK_KM.map(v => (
-                  <button key={v} onClick={() => setKm(v)}
-                    style={{ flex:1, padding:'7px 4px', borderRadius:10, border: km===v ? '1.5px solid #FF9E7D' : '1px solid #E8DDD8', background: km===v ? '#FFF5F0' : 'white', fontSize:12, fontWeight: km===v ? 500 : 400, color: km===v ? '#C4684A' : '#7A5A4E', cursor:'pointer' }}>
-                    {v}
-                  </button>
+                  <button key={v} onClick={() => setKm(v)} style={{ flex:1, padding:'7px 4px', borderRadius:10, border: km===v ? '1.5px solid #FF9E7D' : '1px solid #E8DDD8', background: km===v ? '#FFF5F0' : 'white', fontSize:12, fontWeight: km===v ? 500 : 400, color: km===v ? '#C4684A' : '#7A5A4E', cursor:'pointer' }}>{v}</button>
                 ))}
               </div>
               <div style={{ display:'flex', alignItems:'center', background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:'0 16px', height:52 }}>
-                <input type="number" min="0.1" max="99" step="0.1" value={km} onChange={e => setKm(e.target.value)}
-                  style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="3.2"/>
+                <input type="number" min="0.1" max="99" step="0.1" value={km} onChange={e => setKm(e.target.value)} style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="3.2"/>
                 <span style={{ fontSize:14, color:'#9C7B6B', fontWeight:500 }}>km</span>
               </div>
             </div>
 
-            {/* 時間 */}
             <div style={{ marginBottom:28 }}>
               <p style={{ fontSize:11, letterSpacing:'1.2px', textTransform:'uppercase', color:'#B89A8E', marginBottom:10 }}>跑步時間</p>
               <div style={{ display:'flex', gap:6, marginBottom:10 }}>
                 {QUICK_MIN.map(v => (
-                  <button key={v} onClick={() => setMinutes(v)}
-                    style={{ flex:1, padding:'7px 4px', borderRadius:10, border: minutes===v ? '1.5px solid #FF9E7D' : '1px solid #E8DDD8', background: minutes===v ? '#FFF5F0' : 'white', fontSize:12, fontWeight: minutes===v ? 500 : 400, color: minutes===v ? '#C4684A' : '#7A5A4E', cursor:'pointer' }}>
-                    {v}
-                  </button>
+                  <button key={v} onClick={() => setMinutes(v)} style={{ flex:1, padding:'7px 4px', borderRadius:10, border: minutes===v ? '1.5px solid #FF9E7D' : '1px solid #E8DDD8', background: minutes===v ? '#FFF5F0' : 'white', fontSize:12, fontWeight: minutes===v ? 500 : 400, color: minutes===v ? '#C4684A' : '#7A5A4E', cursor:'pointer' }}>{v}</button>
                 ))}
               </div>
               <div style={{ display:'flex', alignItems:'center', background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:'0 16px', height:52 }}>
-                <input type="number" min="1" max="999" step="1" value={minutes} onChange={e => setMinutes(e.target.value)}
-                  style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="28"/>
+                <input type="number" min="1" max="999" step="1" value={minutes} onChange={e => setMinutes(e.target.value)} style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="28"/>
                 <span style={{ fontSize:14, color:'#9C7B6B', fontWeight:500 }}>分鐘</span>
               </div>
             </div>
 
-            {/* 預估熱量 */}
             <div style={{ background:'rgba(255,158,125,0.08)', border:'1px solid rgba(255,158,125,0.2)', borderRadius:12, padding:'10px 16px', marginBottom:20, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <span style={{ fontSize:12, color:'#9C7B6B' }}>預估消耗</span>
               <div style={{ display:'flex', gap:12 }}>
@@ -200,9 +175,7 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
               </div>
             </div>
 
-            {/* 確認 */}
-            <button onClick={handleConfirm}
-              style={{ width:'100%', height:56, borderRadius:20, border:'none', background:'linear-gradient(135deg,#FFD2B8,#FF9E7D 45%,#E87A5C)', boxShadow:'0 8px 20px -8px rgba(232,122,92,0.5),inset 0 1px 0 rgba(255,255,255,0.4)', color:'white', fontFamily:"'Cormorant Garamond',serif", fontSize:20, fontStyle:'italic', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+            <button onClick={handleConfirm} style={{ width:'100%', height:56, borderRadius:20, border:'none', background:'linear-gradient(135deg,#FFD2B8,#FF9E7D 45%,#E87A5C)', boxShadow:'0 8px 20px -8px rgba(232,122,92,0.5),inset 0 1px 0 rgba(255,255,255,0.4)', color:'white', fontFamily:"'Cormorant Garamond',serif", fontSize:20, fontStyle:'italic', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               ☀️ 注入今日能量！
             </button>
           </div>

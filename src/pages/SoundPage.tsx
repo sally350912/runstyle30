@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import { PLAYLISTS } from '../lib/tokens'
 import type { PlaylistId } from '../lib/tokens'
-import type { AppState } from '../hooks/useStore'
 
 interface Props {
-  state: AppState
   onPlaylistChange: (id: PlaylistId) => void
 }
 
-export default function SoundPage({ state, onPlaylistChange }: Props) {
+export default function SoundPage({ onPlaylistChange }: Props) {
   const [playing, setPlaying] = useState<PlaylistId | null>(null)
 
   const handlePlay = (id: PlaylistId) => {
@@ -20,7 +18,6 @@ export default function SoundPage({ state, onPlaylistChange }: Props) {
   return (
     <div style={{ paddingBottom:24 }}>
       <p style={{ margin:'0 20px 10px', fontSize:10, letterSpacing:'1.2px', textTransform:'uppercase', color:'#B89A8E' }}>Sound of Run</p>
-
       <div style={{ margin:'0 20px 20px', display:'flex', flexDirection:'column', gap:8 }}>
         {PLAYLISTS.map(pl => {
           const on = playing === pl.id

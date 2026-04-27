@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useState, useCallback } from 'react'
 import { useStore } from './hooks/useStore'
 import HomePage       from './pages/HomePage'
@@ -56,7 +55,7 @@ export default function App() {
 
       <main style={{ flex:1, overflowY:'auto', paddingTop:20 }}>
         {tab==='home'  && <HomePage  state={state} todayLog={todayLog} onCheckIn={handleCheckIn} />}
-        {tab==='sound' && <SoundPage state={state} onPlaylistChange={(id: PlaylistId) => setPlaylist(id)} />}
+        {tab==='sound' && <SoundPage onPlaylistChange={(id: PlaylistId) => setPlaylist(id)} />}
         {tab==='share' && <SharePage state={state} todayLog={todayLog} onStyleChange={(id: ShareStyleId) => setShareStyle(id)} onNextQuote={() => nextQuote(QUOTES.length)} />}
         {tab==='wall'  && <WallPage  state={state} />}
       </main>
