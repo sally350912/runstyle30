@@ -1,26 +1,26 @@
 import { useState, useCallback } from 'react'
-import { useStore }      from './hooks/useStore'
-import HomePage          from './pages/HomePage'
-import WeatherPage       from './pages/WeatherPage'
-import SharePage         from './pages/SharePage'
-import WallPage          from './pages/WallPage'
-import MilestoneModal    from './components/MilestoneModal'
-import { QUOTES }        from './lib/tokens'
+import { useStore } from './hooks/useStore'
+import HomePage from './pages/HomePage'
+import WeatherPage from './pages/WeatherPage'
+import SharePage from './pages/SharePage'
+import WallPage from './pages/WallPage'
+import MilestoneModal from './components/MilestoneModal'
+import { QUOTES } from './lib/tokens'
 import type { ShareStyleId } from './lib/tokens'
 
 type TabId = 'home' | 'weather' | 'share' | 'wall'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'home',    label: '\u4eca\u65e5' },
-  { id: 'weather', label: '\u5929\u6c23' },
-  { id: 'share',   label: '\u6253\u5361' },
-  { id: 'wall',    label: '\u6210\u5c31\u7246' },
+  { id: 'home',    label: '今日' },
+  { id: 'weather', label: '天氣' },
+  { id: 'share',   label: '打卡' },
+  { id: 'wall',    label: '成就牆' },
 ]
 
 const MILESTONE_DAYS = [7, 14, 21, 30]
 
 export default function App() {
-  const [tab, setTab]        = useState<TabId>('home')
+  const [tab, setTab] = useState<TabId>('home')
   const [milestone, setMile] = useState<number | null>(null)
   const { state, todayLog, checkIn, setShareStyle, nextQuote } = useStore()
 
@@ -34,7 +34,6 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif", background: '#FFF8F4', minHeight: '100dvh', maxWidth: 390, margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
-
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 12px' }}>
         <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 300, color: '#3A2820', margin: 0 }}>
           Run<span style={{ color: '#FF9E7D', fontStyle: 'italic' }}>Style</span> 30
@@ -43,7 +42,6 @@ export default function App() {
           Day {String(state.currentDay).padStart(2, '0')} / 30
         </div>
       </header>
-
       <nav style={{ display: 'flex', padding: '0 20px', borderBottom: '1px solid #E8DDD8' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -52,14 +50,12 @@ export default function App() {
           </button>
         ))}
       </nav>
-
       <main style={{ flex: 1, overflowY: 'auto', paddingTop: 20 }}>
         {tab === 'home'    && <HomePage    state={state} todayLog={todayLog} onCheckIn={handleCheckIn} />}
         {tab === 'weather' && <WeatherPage />}
         {tab === 'share'   && <SharePage   state={state} todayLog={todayLog} onStyleChange={(id: ShareStyleId) => setShareStyle(id)} onNextQuote={() => nextQuote(QUOTES.length)} />}
         {tab === 'wall'    && <WallPage    state={state} />}
       </main>
-
       {milestone !== null && (
         <MilestoneModal day={milestone} onClose={() => setMile(null)} />
       )}
