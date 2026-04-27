@@ -1,20 +1,20 @@
 import { useState, useCallback } from 'react'
-import { useStore } from './hooks/useStore'
-import HomePage       from './pages/HomePage'
-import SoundPage      from './pages/SoundPage'
-import SharePage      from './pages/SharePage'
-import WallPage       from './pages/WallPage'
-import MilestoneModal from './components/MilestoneModal'
-import { QUOTES }     from './lib/tokens'
-import type { ShareStyleId, PlaylistId } from './lib/tokens'
+import { useStore }      from './hooks/useStore'
+import HomePage          from './pages/HomePage'
+import WeatherPage       from './pages/WeatherPage'
+import SharePage         from './pages/SharePage'
+import WallPage          from './pages/WallPage'
+import MilestoneModal    from './components/MilestoneModal'
+import { QUOTES }        from './lib/tokens'
+import type { ShareStyleId } from './lib/tokens'
 
-type TabId = 'home' | 'sound' | 'share' | 'wall'
+type TabId = 'home' | 'weather' | 'share' | 'wall'
 
 const TABS: { id: TabId; label: string }[] = [
-  { id:'home',  label:'今日' },
-  { id:'sound', label:'音樂' },
-  { id:'share', label:'打卡' },
-  { id:'wall',  label:'成就牆' },
+  { id:'home',    label:'今日' },
+  { id:'weather', label:'天氣' },
+  { id:'share',   label:'打卡' },
+  { id:'wall',    label:'成就牆' },
 ]
 
 const MILESTONE_DAYS = [7, 14, 21, 30]
@@ -22,7 +22,7 @@ const MILESTONE_DAYS = [7, 14, 21, 30]
 export default function App() {
   const [tab, setTab]        = useState<TabId>('home')
   const [milestone, setMile] = useState<number | null>(null)
-  const { state, todayLog, checkIn, setPlaylist, setShareStyle, nextQuote } = useStore()
+  const { state, todayLog, checkIn, setShareStyle, nextQuote } = useStore()
 
   const handleCheckIn = useCallback((km: number, minutes: number) => {
     checkIn(km, minutes)
@@ -35,6 +35,7 @@ export default function App() {
   return (
     <div style={{ fontFamily:"'DM Sans',sans-serif", background:'#FFF8F4', minHeight:'100dvh', maxWidth:390, margin:'0 auto', display:'flex', flexDirection:'column' }}>
 
+      {/* Nav */}
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 20px 12px' }}>
         <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, fontWeight:300, color:'#3A2820', margin:0 }}>
           Run<span style={{ color:'#FF9E7D', fontStyle:'italic' }}>Style</span> 30
@@ -44,6 +45,7 @@ export default function App() {
         </div>
       </header>
 
+      {/* Tabs */}
       <nav style={{ display:'flex', padding:'0 20px', borderBottom:'1px solid #E8DDD8' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -53,13 +55,15 @@ export default function App() {
         ))}
       </nav>
 
+      {/* Content */}
       <main style={{ flex:1, overflowY:'auto', paddingTop:20 }}>
-        {tab==='home'  && <HomePage  state={state} todayLog={todayLog} onCheckIn={handleCheckIn} />}
-        {tab==='sound' && <SoundPage onPlaylistChange={(id: PlaylistId) => setPlaylist(id)} />}
-        {tab==='share' && <SharePage state={state} todayLog={todayLog} onStyleChange={(id: ShareStyleId) => setShareStyle(id)} onNextQuote={() => nextQuote(QUOTES.length)} />}
-        {tab==='wall'  && <WallPage  state={state} />}
+        {tab==='home'    && <HomePage    state={state} todayLog={todayLog} onCheckIn={handleCheckIn} />}
+        {tab==='weather' && <WeatherPage />}
+        {tab==='share'   && <SharePage   state={state} todayLog={todayLog} onStyleChange={(id: ShareStyleId) => setShareStyle(id)} onNextQuote={() => nextQuote(QUOTES.length)} />}
+        {tab==='wall'    && <WallPage    state={state} />}
       </main>
 
+      {/* 里程碑動畫 */}
       {milestone !== null && (
         <MilestoneModal day={milestone} onClose={() => setMile(null)} />
       )}
