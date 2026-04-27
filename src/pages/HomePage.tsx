@@ -7,6 +7,25 @@ interface Props {
   onCheckIn: (km: number, minutes: number) => void
 }
 
+// 以 55kg 女性、慢跑 MET 8.2 計算
+// kcal = MET x kg x hours = 8.2 x 55 x (minutes/60)
+function calcKcal(km: number, minutes: number): number {
+  const met = 8.2
+  const kg  = 55
+  const hrs = minutes / 60
+  return Math.round(met * kg * hrs)
+}
+
+// 激勵語對照（依里程）
+function getMotivation(km: number): string {
+  if (km >= 10) return '\u4eca\u5929\u662f\u5c6c\u65bc\u4f60\u7684\u82f1\u96c4\u65e5\uff01\ud83c\udfc6'
+  if (km >= 7)  return '\u8df3\u51fa\u8212\u9069\u5708\uff0c\u4f60\u770b\u8d77\u4f86\u95dc\u4e0d\u4f4f\u4e86\uff01\u2728'
+  if (km >= 5)  return '\u4e94\u516c\u91cc\uff01\u4f60\u5c31\u662f\u5168\u57ce\u6700\u9177\u7684\u8de8\u8005\u2764\ufe0f'
+  if (km >= 3)  return '\u52a0\u6cb9\uff01\u6bcf\u4e00\u6b65\u90fd\u662f\u5c6c\u65bc\u4f60\u7684\u52dd\u5229\u{1f31f}'
+  if (km >= 1)  return '\u8d77\u6b65\u5c31\u662f\u52c7\u6c23\uff0c\u660e\u5929\u7e7c\u7e8c\u52a0\u6cb9\uff01\ud83d\ude4c'
+  return '\u52a0\u6cb9\uff01\u6bcf\u6b65\u90fd\u662f\u9032\u6b65\ud83d\udcaa'
+}
+
 export default function HomePage({ state, todayLog, onCheckIn }: Props) {
   const [holding, setHolding]     = useState(false)
   const [holdPct, setHoldPct]     = useState(0)
@@ -22,9 +41,9 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
 
   const weekKm      = state.logs.slice(-7).reduce((a, l) => a + l.km, 0).toFixed(1)
   const pct         = Math.round((state.currentDay / 30) * 100)
-  const displayKm   = todayLog ? todayLog.km   : parseFloat(km)
-  const displayKcal = todayLog ? todayLog.kcal : Math.round(displayKm * 55)
-  const displayBoba = (displayKcal / 230).toFixed(1)
+  const displayKm   = todayLog ? todayLog.km      : parseFloat(km)
+  const displayMin  = todayLog ? todayLog.minutes  : parseFloat(minutes)
+  const displayKcal = todayLog ? todayLog.kcal     : calcKcal(displayKm, displayMin)
 
   const startHold = useCallback(() => {
     if (done) return
@@ -95,20 +114,42 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
 
       {/* 數據格 */}
       <div style={{ margin:'0 20px 16px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-        {[
-          { label:'今日里程', val:displayKm,   unit:'km' },
-          { label:'珍奶熱量', val:displayBoba, unit:'杯' },
-          { label:'本週總計', val:weekKm,      unit:'km' },
-          { label:'消耗熱量', val:displayKcal, unit:'kcal' },
-        ].map(({ label, val, unit }) => (
-          <div key={label} style={{ background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:14 }}>
-            <p style={{ fontSize:10, color:'#B89A8E', letterSpacing:'0.8px', textTransform:'uppercase', marginBottom:4 }}>{label}</p>
-            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:300, color:'#3A2820', lineHeight:1, margin:0 }}>
-              {val}<span style={{ fontSize:12, color:'#9C7B6B', marginLeft:3 }}>{unit}</span>
+        <div style={{ background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:14 }}>
+          <p style={{ fontSize:10, color:'#B89A8E', letterSpacing:'0.8px', textTransform:'uppercase', marginBottom:4 }}>今日里程</p>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:300, color:'#3A2820', lineHeight:1, margin:0 }}>
+            {displayKm}<span style={{ fontSize:12, color:'#9C7B6B', marginLeft:3 }}>km</span>
+          </p>
+        </div>
+        <div style={{ background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:14 }}>
+          <p style={{ fontSize:10, color:'#B89A8E', letterSpacing:'0.8px', textTransform:'uppercase', marginBottom:4 }}>本週總計</p>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:300, color:'#3A2820', lineHeight:1, margin:0 }}>
+            {weekKm}<span style={{ fontSize:12, color:'#9C7B6B', marginLeft:3 }}>km</span>
+          </p>
+        </div>
+
+        {/* 今日燃燒熱量 — 橫跨兩欄 */}
+        <div style={{ gridColumn:'1 / -1', background:'linear-gradient(135deg,rgba(255,212,188,0.3),rgba(255,158,125,0.15))', border:'1px solid rgba(255,158,125,0.3)', borderRadius:14, padding:'14px 16px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div>
+            <p style={{ fontSize:10, color:'#B89A8E', letterSpacing:'0.8px', textTransform:'uppercase', marginBottom:4 }}>今天燃燒了</p>
+            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:32, fontWeight:300, color:'#C4684A', lineHeight:1, margin:0 }}>
+              {displayKcal} <span style={{ fontSize:14, color:'#9C7B6B' }}>大卡</span>
             </p>
           </div>
-        ))}
+          <div style={{ textAlign:'right' }}>
+            <p style={{ fontSize:20, margin:'0 0 4px' }}>🔥</p>
+            <p style={{ fontSize:12, color:'#C4684A', fontWeight:500, margin:0 }}>繼續加油！</p>
+          </div>
+        </div>
       </div>
+
+      {/* 激勵文字 */}
+      {done && (
+        <div style={{ margin:'0 20px 16px', textAlign:'center' }}>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:16, fontStyle:'italic', color:'#9C7B6B', margin:0 }}>
+            {getMotivation(displayKm)}
+          </p>
+        </div>
+      )}
 
       {/* 暖光簽到 */}
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'8px 0 4px' }}>
@@ -127,7 +168,7 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
         </p>
       </div>
 
-      {/* 跑步記錄輸入彈窗 */}
+      {/* 跑步記錄彈窗 */}
       {showModal && (
         <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(58,40,32,0.5)', display:'flex', alignItems:'flex-end', justifyContent:'center' }}
           onClick={e => e.target === e.currentTarget && setShowModal(false)}>
@@ -148,12 +189,13 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
                 ))}
               </div>
               <div style={{ display:'flex', alignItems:'center', background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:'0 16px', height:52 }}>
-                <input type="number" min="0.1" max="99" step="0.1" value={km} onChange={e => setKm(e.target.value)} style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="3.2"/>
+                <input type="number" min="0.1" max="99" step="0.1" value={km} onChange={e => setKm(e.target.value)}
+                  style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="3.2"/>
                 <span style={{ fontSize:14, color:'#9C7B6B', fontWeight:500 }}>km</span>
               </div>
             </div>
 
-            <div style={{ marginBottom:28 }}>
+            <div style={{ marginBottom:24 }}>
               <p style={{ fontSize:11, letterSpacing:'1.2px', textTransform:'uppercase', color:'#B89A8E', marginBottom:10 }}>跑步時間</p>
               <div style={{ display:'flex', gap:6, marginBottom:10 }}>
                 {QUICK_MIN.map(v => (
@@ -161,21 +203,25 @@ export default function HomePage({ state, todayLog, onCheckIn }: Props) {
                 ))}
               </div>
               <div style={{ display:'flex', alignItems:'center', background:'white', border:'1px solid #E8DDD8', borderRadius:14, padding:'0 16px', height:52 }}>
-                <input type="number" min="1" max="999" step="1" value={minutes} onChange={e => setMinutes(e.target.value)} style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="28"/>
+                <input type="number" min="1" max="999" step="1" value={minutes} onChange={e => setMinutes(e.target.value)}
+                  style={{ flex:1, border:'none', background:'transparent', fontFamily:"'Cormorant Garamond',serif", fontSize:28, fontWeight:300, color:'#3A2820', outline:'none' }} placeholder="28"/>
                 <span style={{ fontSize:14, color:'#9C7B6B', fontWeight:500 }}>分鐘</span>
               </div>
             </div>
 
-            <div style={{ background:'rgba(255,158,125,0.08)', border:'1px solid rgba(255,158,125,0.2)', borderRadius:12, padding:'10px 16px', marginBottom:20, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontSize:12, color:'#9C7B6B' }}>預估消耗</span>
-              <div style={{ display:'flex', gap:12 }}>
-                <span style={{ fontSize:13, fontWeight:500, color:'#3A2820' }}>{Math.round((parseFloat(km)||0)*55)} kcal</span>
-                <span style={{ fontSize:13, color:'#9C7B6B' }}>≈</span>
-                <span style={{ fontSize:13, fontWeight:500, color:'#FF9E7D' }}>🧋 {((parseFloat(km)||0)*55/230).toFixed(1)} 杯珍奶</span>
+            {/* 預估熱量 */}
+            <div style={{ background:'rgba(255,158,125,0.08)', border:'1px solid rgba(255,158,125,0.2)', borderRadius:12, padding:'12px 16px', marginBottom:20, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div>
+                <p style={{ fontSize:11, color:'#9C7B6B', margin:'0 0 3px' }}>預估燃燒熱量</p>
+                <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:22, color:'#C4684A', fontWeight:300, margin:0 }}>
+                  {calcKcal(parseFloat(km)||0, parseFloat(minutes)||0)} 大卡 🔥
+                </p>
               </div>
+              <p style={{ fontSize:13, color:'#FF9E7D', fontWeight:500, margin:0 }}>繼續加油！</p>
             </div>
 
-            <button onClick={handleConfirm} style={{ width:'100%', height:56, borderRadius:20, border:'none', background:'linear-gradient(135deg,#FFD2B8,#FF9E7D 45%,#E87A5C)', boxShadow:'0 8px 20px -8px rgba(232,122,92,0.5),inset 0 1px 0 rgba(255,255,255,0.4)', color:'white', fontFamily:"'Cormorant Garamond',serif", fontSize:20, fontStyle:'italic', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+            <button onClick={handleConfirm}
+              style={{ width:'100%', height:56, borderRadius:20, border:'none', background:'linear-gradient(135deg,#FFD2B8,#FF9E7D 45%,#E87A5C)', boxShadow:'0 8px 20px -8px rgba(232,122,92,0.5),inset 0 1px 0 rgba(255,255,255,0.4)', color:'white', fontFamily:"'Cormorant Garamond',serif", fontSize:20, fontStyle:'italic', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               ☀️ 注入今日能量！
             </button>
           </div>
