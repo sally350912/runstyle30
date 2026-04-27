@@ -22,10 +22,11 @@ export interface AppState {
   todayCheckedIn: boolean
 }
 
+// 新用戶從第 1 天開始
 const DEFAULT_STATE: AppState = {
-  currentDay: 7,
-  streak: 7,
-  restCardsUsed: 1,
+  currentDay: 1,
+  streak: 0,
+  restCardsUsed: 0,
   logs: [],
   activePlaylist: 'dawn',
   activeShareStyle: 'sunset-beach',
