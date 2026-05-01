@@ -22,3 +22,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Keys & certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+id_rsa
+id_dsa
+
+# Common credential / config files
+secrets.*
+credentials.*
+firebase-*.json
+serviceAccount*.json
+
+# OS / misc
+Thumbs.db
